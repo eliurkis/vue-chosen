@@ -1,5 +1,5 @@
 <template>
-    <select :data-placeholder="placeholder" :multiple="multiple" ref="select">
+    <select :data-placeholder="placeholder" :multiple="multiple">
         <option v-for="option in customOptions" v-bind:value="option.id">
             {{ option.label }}
         </option>
