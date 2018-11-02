@@ -1,5 +1,5 @@
 <template>
-    <select :data-placeholder="placeholder" :multiple="multiple">
+    <select :data-placeholder="placeholder" :multiple="multiple" :disabled="disabled">
         <option v-for="option in customOptions" v-bind:value="option.id">
             {{ option.label }}
         </option>
@@ -15,7 +15,7 @@
             },
             options: {
                 type: [Array, Object],
-                default: []
+                default: Object
             },
             multiple: {
                 type: Boolean,
@@ -36,6 +36,20 @@
             allowEmpty: {
                 type: Boolean,
                 default: true
+            },
+            allowAll: {
+                type: Boolean,
+                default: false
+            },
+            disabled: {
+                type: Boolean,
+                default: false
+            },
+            onValueReturn: {
+                type: Object,
+                default: () => {
+                    return {}
+                }
             }
         },
 
@@ -44,7 +58,14 @@
                 let vm = this,
                     options = [];
 
-                Object.keys(this.options).forEach(function(key) {
+                if (this.allowAll) {
+                    options.push({
+                        'id': '-1',
+                        'label': 'All'
+                    });
+                }
+
+                Object.keys(this.options).forEach(function (key) {
                     options.push({
                         'id': key,
                         'label': vm.options[key]
@@ -55,11 +76,13 @@
             },
 
             localValue() {
-                this.$nextTick(function() {
-                    $(this.$el).val(this.value).trigger("chosen:updated");
+                let value = this.allowAll && this.value === null ? '-1' : this.value
+
+                this.$nextTick(function () {
+                    $(this.$el).val(value).trigger("chosen:updated");
                 });
 
-                return this.value;
+                return value;
             }
         },
 
@@ -68,8 +91,9 @@
             },
 
             customOptions() {
-                this.$nextTick(function() {
-                    $(this.$el).val(this.value).trigger("chosen:updated");
+                this.$nextTick(function () {
+                    let value = this.allowAll && this.value === null ? '-1' : this.value
+                    $(this.$el).val(value).trigger("chosen:updated");
                 });
             }
         },
@@ -80,7 +104,14 @@
             $(this.$el).chosen({
                 width: "100%",
                 disable_search_threshold: this.searchable ? this.searchableMin : 100000
-            }).change(function($event) {
+            }).change(function ($event) {
+                const value = $($event.target).val()
+                if (typeof component.onValueReturn[value] !== 'undefined') {
+                    return component.$emit('input', component.onValueReturn[value]);
+                }
+                if (component.allowAll && $($event.target).val() === '-1') {
+                    return component.$emit('input', null);
+                }
                 component.$emit('input', $($event.target).val());
             });
         }
