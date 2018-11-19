@@ -7,8 +7,6 @@
 </template>
 
 <script>
-    import has from 'lodash/has'
-
     export default {
         props: {
             value: {
@@ -73,9 +71,7 @@
                     })
                 }
 
-                if (Array.isArray(this.options)
-                    && has(this.options, '[0].id')
-                    && has(this.options, '[0].' + this.label)) {
+                if (Array.isArray(this.options)) {
                     return options.concat(this.options)
                 }
 
