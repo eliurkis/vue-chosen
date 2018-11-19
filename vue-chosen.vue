@@ -1,6 +1,6 @@
 <template>
     <select :data-placeholder="placeholder" :multiple="multiple" :disabled="disabled">
-        <option v-for="option in customOptions" v-bind:value="option[trackBy]">
+        <option v-for="option in localOptions" v-bind:value="option[trackBy]">
             {{ option[label] }}
         </option>
     </select>
@@ -15,7 +15,7 @@
             },
             options: {
                 type: [Array, Object],
-                default: Object
+                default: () => []
             },
             label: {
                 type: String,
@@ -60,13 +60,13 @@
         },
 
         computed: {
-            customOptions() {
+            localOptions() {
                 let vm = this,
                     options = []
 
                 if (this.allowAll) {
                     options.push({
-                        [this.trackBy]: '-1',
+                        [this.trackBy]: -1,
                         [this.label]: 'All'
                     })
                 }
@@ -88,7 +88,7 @@
             },
 
             localValue() {
-                let value = this.allowAll && this.value === null ? '-1' : this.value
+                let value = this.allowAll && this.value === null ? -1 : this.value
 
                 this.$nextTick(function () {
                     $(this.$el).val(value).trigger("chosen:updated")
@@ -102,7 +102,7 @@
             localValue() {
             },
 
-            customOptions() {
+            localOptions() {
                 this.$nextTick(function () {
                     let value = this.allowAll && this.value === null ? '-1' : this.value
                     $(this.$el).val(value).trigger("chosen:updated")
@@ -121,7 +121,7 @@
                 if (typeof component.onValueReturn[value] !== 'undefined') {
                     return component.$emit('input', component.onValueReturn[value])
                 }
-                if (component.allowAll && $($event.target).val() === '-1') {
+                if (component.allowAll && ($($event.target).val() === '-1' || $($event.target).val() === -1)) {
                     return component.$emit('input', null)
                 }
                 component.$emit('input', $($event.target).val())
