@@ -1,12 +1,14 @@
 <template>
     <select :data-placeholder="placeholder" :multiple="multiple" :disabled="disabled">
-        <option v-for="option in customOptions" v-bind:value="option.id">
-            {{ option.label }}
+        <option v-for="option in customOptions" v-bind:value="option[trackBy]">
+            {{ option[label] }}
         </option>
     </select>
 </template>
 
 <script>
+    import has from 'lodash/has'
+
     export default {
         props: {
             value: {
@@ -16,6 +18,14 @@
             options: {
                 type: [Array, Object],
                 default: Object
+            },
+            label: {
+                type: String,
+                default: 'label'
+            },
+            trackBy: {
+                type: String,
+                default: 'id'
             },
             multiple: {
                 type: Boolean,
@@ -47,42 +57,48 @@
             },
             onValueReturn: {
                 type: Object,
-                default: () => {
-                    return {}
-                }
+                default: () => ({})
             }
         },
 
         computed: {
             customOptions() {
                 let vm = this,
-                    options = [];
+                    options = []
 
                 if (this.allowAll) {
                     options.push({
-                        'id': '-1',
-                        'label': 'All'
-                    });
+                        [this.trackBy]: '-1',
+                        [this.label]: 'All'
+                    })
+                }
+
+                if (Array.isArray(this.options)
+                    && has(this.options, '[0].id')
+                    && has(this.options, '[0].' + this.label)) {
+                    return options.concat(this.options)
                 }
 
                 Object.keys(this.options).forEach(function (key) {
                     options.push({
-                        'id': key,
-                        'label': vm.options[key]
-                    });
-                });
+                        [vm.trackBy]: key,
+                        [vm.label]: vm.options[key]
+                    })
+                })
 
-                return this.allowEmpty ? [{id: null, label: ''}].concat(options) : options;
+                return this.allowEmpty
+                    ? [{ [this.trackBy]: null, [this.label]: '' }].concat(options)
+                    : options
             },
 
             localValue() {
                 let value = this.allowAll && this.value === null ? '-1' : this.value
 
                 this.$nextTick(function () {
-                    $(this.$el).val(value).trigger("chosen:updated");
-                });
+                    $(this.$el).val(value).trigger("chosen:updated")
+                })
 
-                return value;
+                return value
             }
         },
 
@@ -93,13 +109,13 @@
             customOptions() {
                 this.$nextTick(function () {
                     let value = this.allowAll && this.value === null ? '-1' : this.value
-                    $(this.$el).val(value).trigger("chosen:updated");
-                });
+                    $(this.$el).val(value).trigger("chosen:updated")
+                })
             }
         },
 
         mounted() {
-            let component = this;
+            let component = this
 
             $(this.$el).chosen({
                 width: "100%",
@@ -107,13 +123,13 @@
             }).change(function ($event) {
                 const value = $($event.target).val()
                 if (typeof component.onValueReturn[value] !== 'undefined') {
-                    return component.$emit('input', component.onValueReturn[value]);
+                    return component.$emit('input', component.onValueReturn[value])
                 }
                 if (component.allowAll && $($event.target).val() === '-1') {
-                    return component.$emit('input', null);
+                    return component.$emit('input', null)
                 }
-                component.$emit('input', $($event.target).val());
-            });
+                component.$emit('input', $($event.target).val())
+            })
         }
     }
 </script>
